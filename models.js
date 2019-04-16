@@ -12,8 +12,8 @@ let teams = (() => {
     invalidateCache() {
       cache = null
     },
-    async transaction(tx) {
-      await lock(async () => {
+    transaction(tx) {
+      return lock(async () => {
         let result
         try {
           result = await tx(table)
@@ -28,7 +28,7 @@ let teams = (() => {
 
 exports.createTeam = async function(members) {
   return await teams.transaction(async (table) => {
-    const rows = teams.get()
+    const rows = await teams.get() + 1
     const data = {
       name: `New Team ${rows.length}`,
       participants: members.join(',')
