@@ -11,7 +11,7 @@ const app = express();
 const base = require('airtable').base('appGku14IaF3SIUts');
 
 app.use(express.static('public'));
-app.use(require('body-parser').json());
+app.use(require('body-parser').urlencoded({ extended: false }));
 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/views/index.html');
