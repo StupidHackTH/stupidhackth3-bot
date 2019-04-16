@@ -8,6 +8,8 @@ const app = express();
 // we've started you off with Express, 
 // but feel free to use whatever libs or frameworks you'd like through `package.json`.
 
+const base = require('airtable').base('appGku14IaF3SIUts');
+
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
 
