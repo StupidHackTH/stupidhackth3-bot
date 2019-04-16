@@ -27,7 +27,7 @@ let teams = (() => {
 })()
 
 exports.createTeam = async function(members) {
-  await teams.transaction(async (table) => {
+  return await teams.transaction(async (table) => {
     const rows = teams.get()
     const data = {
       name: `New Team ${rows.length}`,

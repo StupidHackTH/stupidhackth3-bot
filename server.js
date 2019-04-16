@@ -30,9 +30,7 @@ app.post('/team', async function(req, res, next) {
       const team = await models.createTeam(out)
       res.json({
         response_type: 'in_channel',
-        text: `OK, created team "${team.name}" with ${out
-          .map(x => `<@${x}>`)
-          .join(', ')}.`
+        text: `OK, created team "${team.name}" with ${out.map(x => `<@${x}>`).join(', ')}.`
       })
     }
   } catch (err) {
