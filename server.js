@@ -27,13 +27,13 @@ async function postRequest(requesterId, responseUrl, description, type, payload)
   })
   return {
     response_type: 'in_channel',
-    text: `Received request by <@${requesterId}> to ${description} (reference id: ${ref.key}).`
+    text: `Received request \`${ref.key}\` by <@${requesterId}> to ${description}.`
   }
 }
 
 require('./queue-processor').start()
 
-async function teamBot(requesterId, responseUrl, text) {
+async function stupidBot(requesterId, responseUrl, text) {
   const args = text.split(/\s+/).filter(x => x.trim())
   const post = (description, type, payload) => postRequest(requesterId, responseUrl, description, type, payload)
   if (args[0] === 'add') {
@@ -51,14 +51,25 @@ async function teamBot(requesterId, responseUrl, text) {
     return {
       text: 'Meow'
     }
+  } else if (args[0] === 'retry') {
+    const key = args[1]
+    const ref = admin.database().ref('bot/requests').child(key)
+    const item = await ref.once('value')
+    if (!item.exists()) {
+      throw new Error('Request does not exist')
+    }
+    if (!item.child('status').val() === 'pending') {
+      throw new Error('Request is already pending')
+    }
+    await item.child('status').set('pending')
   } else {
     throw new Error('Unrecognized command...')
   }
 }
 
-app.post('/team', async function(req, res, next) {
+app.post('/stupid', async function(req, res, next) {
   try {
-    const result = await teamBot(req.body.user_id, req.body.response_url, req.body.text)
+    const result = await stupidBot(req.body.user_id, req.body.response_url, req.body.text)
     res.json(result)
   } catch (err) {
     axios.post(process.env.REPORTING_SLACK_WEBHOOK_URL, {

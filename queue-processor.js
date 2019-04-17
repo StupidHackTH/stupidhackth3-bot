@@ -43,35 +43,50 @@ async function processRequest(request, key) {
 exports.start = async () => {
   for (;;) {
     const pending = (await query.once('value')).val() || {}
-    let key
+    let context = 'loop'
     try {
       const pendingCount = Object.keys(pending).length
       if (Object.keys(pending).length === 0) {
         continue
       }
       const key = Object.keys(pending)[0]
+      const request = pending[key]
+      context = `request ${key}` + [
+        '',
+        '```',
+        require('util').inspect(request, { depth: 10 }),
+        '```',
+      ].join('\n')
       console.log(`Found ${pendingCount} pending requests -- will process ${key}`)
       try {
-        const result = await processRequest(pending[key], key)
-        if (result !== undefined) {
-        }
+        const result = await processRequest(request, key)
+        await admin.database().ref('bot/requests').child(key).update({
+          status: 'completed',
+          result: result || null
+        })
+        await axios.post(request.responseUrl, {
+          response_type: 'in_channel',
+          text: `<@${request.requesterId}> Request \`${key}\` completed — ${result}`,
+        })
       } catch (error) {
         console.error(error)
-        continue
         await admin.database().ref('bot/requests').child(key).update({
           status: 'failed',
           error: String(error && error.stack)
         })
-        await axios.post()
+        await axios.post(request.responseUrl, {
+          response_type: 'in_channel',
+          text: `<@${request.requesterId}> Failed to process request \`${key}\` — ${error}`,
+        })
       }
     } catch (error) {
       console.error(error)
       axios.post(process.env.REPORTING_SLACK_WEBHOOK_URL, {
         text: [
-          `Failed to process request ${key}`,
+          `Failed to process ${context}`,
           '',
           '```',
-          require('util').inspect(),
+          String(error && error.stack),
           '```',
         ].join('\n')
       })
