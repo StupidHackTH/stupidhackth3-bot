@@ -32,6 +32,12 @@ app.post('/team', async function(req, res, next) {
         response_type: 'in_channel',
         text: `OK, created team "${team.name}" with ${out.map(x => `<@${x}>`).join(', ')}.`
       })
+    } else if (args[0] === undefined || args[0] === 'info') {
+      res.json({
+        text: 'Meow'
+      })
+    } else {
+      throw new Error('Unrecognized command...')
     }
   } catch (err) {
     axios.post(process.env.REPORTING_SLACK_WEBHOOK_URL, {
