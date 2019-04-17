@@ -11,6 +11,9 @@ async function processRequest(request, key) {
   if (request.type === 'AddToTeam') {
     return await models.addToTeam(request.requesterId, request.payload.addeeIds)
   }
+  if (request.type === 'LeaveTeam') {
+    return await models.leaveTeam(request.requesterId)
+  }
   throw new Error('Unimplemented request handler for type ' + request.type)
 }
 
@@ -65,7 +68,7 @@ exports.start = async () => {
         ].join('\n')
       })
     } finally {
-      await new Promise(resolve => setTimeout(resolve, 5000))
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
 }

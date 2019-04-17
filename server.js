@@ -41,9 +41,15 @@ async function stupidBot(requesterId, responseUrl, text) {
       throw new Error(`Please tag the users you would like to add to your team.`)
     }
     return post(
-      `add ${out.map(x => `<@${x}>`)} to team`,
+      `add ${out.map(x => `<@${x}>`)} to your team`,
       'AddToTeam',
       { addeeIds: out }
+    )
+  } else if (args[0] === 'leave') {
+    return post(
+      `leave your current team`,
+      'LeaveTeam',
+      { }
     )
   } else if (args[0] === undefined || args[0] === 'info') {
     return {
