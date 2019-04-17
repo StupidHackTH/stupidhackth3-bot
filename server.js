@@ -27,7 +27,7 @@ async function postRequest(requesterId, responseUrl, description, type, payload)
   })
   return {
     response_type: 'in_channel',
-    text: `Received request \`${ref.key}\` by <@${requesterId}> to ${description}.`
+    text: `<@${requesterId}> Received request \`${ref.key}\` to ${description}.`
   }
 }
 
@@ -61,7 +61,7 @@ async function stupidBot(requesterId, responseUrl, text) {
     if (!item.child('status').val() === 'pending') {
       throw new Error('Request is already pending')
     }
-    await item.child('status').set('pending')
+    await ref.child('status').set('pending')
   } else {
     throw new Error('Unrecognized command...')
   }

@@ -1,12 +1,10 @@
 const admin = require('./firebase-admin')
 const query = admin.database().ref('bot/requests').orderByChild('status').equalTo('pending')
 const base = require('airtable').base('appGku14IaF3SIUts')
-const throat = require('throat')
 const axios = require('axios')
 
 function table(tableName) {
   let cache
-  const lock = throat(1)
   const table = base(tableName)
   return {
     get() {
@@ -15,29 +13,69 @@ function table(tableName) {
     invalidateCache() {
       cache = null
     },
-    transaction(tx) {
-      return lock(async () => {
-        let result
-        try {
-          result = await tx(table)
-          return result
-        } finally {
-          if (result !== false) cache = null
-        }
-      })
+    async transaction(tx) {
+      let result
+      try {
+        result = await tx(table)
+        return result
+      } finally {
+        if (result !== false) cache = null
+      }
     }
   }
 }
+
+const teams = table('Teams')
 
 query.on('value', () => {
   // Just for the subscription...
 })
 
+const findExistingTeam = (teamRecords, userId) => {
+  return teamRecords.find(teamRecord => teamRecord.fields.participants.split(',').includes(userId))
+}
+
+const formatUsers = userIds => userIds.map(u => `<@${u}>`).join(', ')
+
 async function processRequest(request, key) {
   if (request.type === 'AddToTeam') {
-    
+    return await teams.transaction(async table => {
+      const teamRecords = await teams.get()
+      const existingTeam = findExistingTeam(teamRecords, request)
+      if (existingTeam) {
+        const existingParticipants = existingTeam.fields.participants.split(',')
+        const participants = [
+          ...new Set([
+            ...existingParticipants,
+            ...request.payload.addeeIds,
+          ])
+        ]
+        const added = participants.filter(p => !existingParticipants.include(','))
+        if (added.length > 0) {
+          await table.update(existingTeam.id, {
+            participants: participants.join(',')
+          })
+          return `Added ${formatUsers(added)} to team “${existingTeam.fields.name}”`
+        } else {
+          return `Didn’t add anyone new to team “${existingTeam.fields.name}”`
+        }
+      } else {
+        const number = teamRecords.length + 1
+        // const data = {
+        //   name: `New Team ${rows.length}`,
+        //   participants: participantIds.join(',')
+        // }
+        // await table.create(data)
+        // return {
+        //   newTeam: {
+        //     name: data.name,
+        //     participantIds: participantIds
+        //   }
+        // }
+      }
+    })
   }
-  throw new Error('Unimplemented')
+  throw new Error('Unimplemented request handler for type ' + request.type)
 }
 
 exports.start = async () => {
