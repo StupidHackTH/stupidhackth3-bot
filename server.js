@@ -5,9 +5,7 @@
 const express = require('express')
 const app = express()
 const axios = require('axios')
-
-// we've started you off with Express,
-// but feel free to use whatever libs or frameworks you'd like through `package.json`.
+const admin = require('./firebase-admin')
 const models = require('./models')
 
 app.use(express.static('public'))
@@ -17,28 +15,47 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/views/index.html')
 })
 
-async function teamBot(text, userId) {
+async function postRequest(requesterId, responseUrl, description, type, payload) {
+  const ref = await admin.database().ref('bot/requests').push({
+    description,
+    type,
+    payload,
+    status: 'pending',
+    createdAt: admin.database.ServerValue.TIMESTAMP,
+    requesterId,
+    responseUrl
+  })
+  return {
+    response_type: 'in_channel',
+    text: `Received request by <@${requesterId}> to ${description} (reference id: ${ref}).`
+  }
+}
+
+async function teamBot(requesterId, responseUrl, text) {
   const args = text.split(/\s+/).filter(x => x.trim())
+  const post = (description, type, payload) => postRequest(requesterId, responseUrl, description, type, payload)
   if (args[0] === 'add') {
-    const out = [userId]
+    const out = []
     text.replace(/<@(U\w+)/g, (a, x) => out.push(x))
-    if (out.length < 3) {
-      throw new Error(`Sorry, cannot create team as you need at least 3 members (${out.length} found).`)
+    if (out.length < 1) {
+      throw new Error(`Please tag the users you would like to add to your team.`)
     }
-    const result = await models.createTeam(out)
-    if (result.newTeam) {
-      const team = result.newTeam
-      return {
-        response_type: 'in_channel',
-        text: `Created team "${team.name}" with ${team.participantIds.map(x => `<@${x}>`).join(', ')}.`
-      }
-    } else {
-      const team = result.existingTeam
-      return {
-        response_type: 'in_channel',
-        text: `Added ${result.addedParticipantIds.map(x => `<@${x}>`).join(', ')} to team "${team.name}".`
-      }
-    }
+    return post(
+    )
+    // const result = await models.createTeam(out)
+    // if (result.newTeam) {
+    //   const team = result.newTeam
+    //   return {
+    //     response_type: 'in_channel',
+    //     text: `Created team "${team.name}" with ${team.participantIds.map(x => `<@${x}>`).join(', ')}.`
+    //   }
+    // } else {
+    //   const team = result.existingTeam
+    //   return {
+    //     response_type: 'in_channel',
+    //     text: `Added ${result.addedParticipantIds.map(x => `<@${x}>`).join(', ')} to team "${team.name}".`
+    //   }
+    // }
   } else if (args[0] === undefined || args[0] === 'info') {
     return {
       text: 'Meow'
@@ -50,7 +67,7 @@ async function teamBot(text, userId) {
 
 app.post('/team', async function(req, res, next) {
   try {
-    const result = await teamBot(req.body.text, req.body.user_id)
+    const result = await teamBot(req.body.user_id, req.body.response_url, req.body.text)
     res.json(result)
   } catch (err) {
     axios.post(process.env.REPORTING_SLACK_WEBHOOK_URL, {

@@ -14,7 +14,9 @@
     "airtable": "^0.5.10",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
-    "throat": "^4.1.0"
+    "throat": "^4.1.0",
+    "firebase-admin": "^7.2.0",
+    "shortid": "^2.2.14"
   },
   "engines": {
     "node": "8.x"
