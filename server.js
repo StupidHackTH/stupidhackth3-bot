@@ -31,8 +31,6 @@ async function postRequest(requesterId, responseUrl, description, type, payload)
   }
 }
 
-require('./queue-processor').start()
-
 async function stupidBot(requesterId, responseUrl, text) {
   const args = text.split(/\s+/).filter(x => x.trim())
   const post = (description, type, payload) => postRequest(requesterId, responseUrl, description, type, payload)
@@ -49,7 +47,7 @@ async function stupidBot(requesterId, responseUrl, text) {
     )
   } else if (args[0] === undefined || args[0] === 'info') {
     return {
-      text: 'Meow'
+      text: await models.getTeamInfo(requesterId)
     }
   } else if (args[0] === 'retry') {
     const key = args[1]
@@ -92,3 +90,5 @@ app.post('/stupid', async function(req, res, next) {
 const listener = app.listen(process.env.PORT, function() {
   console.log('Your app is listening on port ' + listener.address().port)
 })
+
+require('./queue-processor').start()
