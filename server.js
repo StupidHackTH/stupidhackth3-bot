@@ -17,28 +17,41 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/views/index.html')
 })
 
+async function teamBot(text, userId) {
+  const args = text.split(/\s+/).filter(x => x.trim())
+  if (args[0] === 'add') {
+    const out = [userId]
+    text.replace(/<@(U\w+)/g, (a, x) => out.push(x))
+    if (out.length < 3) {
+      throw new Error(`Sorry, cannot create team as you need at least 3 members (${out.length} found).`)
+    }
+    const result = await models.createTeam(out)
+    if (result.newTeam) {
+      const team = result.newTeam
+      return {
+        response_type: 'in_channel',
+        text: `Created team "${team.name}" with ${team.participantIds.map(x => `<@${x}>`).join(', ')}.`
+      }
+    } else {
+      const team = result.existingTeam
+      return {
+        response_type: 'in_channel',
+        text: `Added ${result.addedParticipantIds.map(x => `<@${x}>`).join(', ')} to team "${team.name}".`
+      }
+    }
+  } else if (args[0] === undefined || args[0] === 'info') {
+    return {
+      text: 'Meow'
+    }
+  } else {
+    throw new Error('Unrecognized command...')
+  }
+}
+
 app.post('/team', async function(req, res, next) {
   try {
-    const args = req.body.text.split(/\s+/).filter(x => x.trim())
-    if (args[0] === 'invite') {
-      const out = [req.body.user_id]
-      req.body.text.replace(/<@(U\w+)/g, (a, x) => out.push(x))
-      if (out.length < 3) {
-        throw new Error(`Sorry, cannot create team as you need at least 3 members (${out.length} found).`)
-        return
-      }
-      const team = await models.createTeam(out)
-      res.json({
-        response_type: 'in_channel',
-        text: `OK, created team "${team.name}" with ${out.map(x => `<@${x}>`).join(', ')}.`
-      })
-    } else if (args[0] === undefined || args[0] === 'info') {
-      res.json({
-        text: 'Meow'
-      })
-    } else {
-      throw new Error('Unrecognized command...')
-    }
+    const result = await teamBot(req.body.text, req.body.user_id)
+    res.json(result)
   } catch (err) {
     axios.post(process.env.REPORTING_SLACK_WEBHOOK_URL, {
       text: [
