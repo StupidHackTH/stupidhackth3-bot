@@ -27,9 +27,11 @@ async function postRequest(requesterId, responseUrl, description, type, payload)
   })
   return {
     response_type: 'in_channel',
-    text: `Received request by <@${requesterId}> to ${description} (reference id: ${ref}).`
+    text: `Received request by <@${requesterId}> to ${description} (reference id: ${ref.key}).`
   }
 }
+
+require('./queue-processor').start()
 
 async function teamBot(requesterId, responseUrl, text) {
   const args = text.split(/\s+/).filter(x => x.trim())
@@ -41,21 +43,10 @@ async function teamBot(requesterId, responseUrl, text) {
       throw new Error(`Please tag the users you would like to add to your team.`)
     }
     return post(
+      `add ${out.map(x => `<@${x}>`)} to team`,
+      'AddToTeam',
+      { addeeIds: out }
     )
-    // const result = await models.createTeam(out)
-    // if (result.newTeam) {
-    //   const team = result.newTeam
-    //   return {
-    //     response_type: 'in_channel',
-    //     text: `Created team "${team.name}" with ${team.participantIds.map(x => `<@${x}>`).join(', ')}.`
-    //   }
-    // } else {
-    //   const team = result.existingTeam
-    //   return {
-    //     response_type: 'in_channel',
-    //     text: `Added ${result.addedParticipantIds.map(x => `<@${x}>`).join(', ')} to team "${team.name}".`
-    //   }
-    // }
   } else if (args[0] === undefined || args[0] === 'info') {
     return {
       text: 'Meow'
