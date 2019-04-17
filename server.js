@@ -51,6 +51,13 @@ async function stupidBot(requesterId, responseUrl, text) {
       'LeaveTeam',
       { }
     )
+  } else if (args[0] === 'set') {
+    const value = args.slice(2).join(' ')
+    return post(
+      `change your team’s \`${args[1]}\` to “${value}”`,
+      'SetTeamAttribute',
+      { key: args[1], value: value }
+    )
   } else if (args[0] === undefined || args[0] === 'info') {
     return {
       text: await models.getTeamInfo(requesterId)

@@ -105,7 +105,7 @@ exports.leaveTeam = async function(requesterId) {
     const existingTeam = findExistingTeam(teamRecords, requesterId)
     if (!existingTeam) {
       noop()
-      return 'How can you leave your team when you don’t have one?'
+      throw new Error('How can you leave your team when you don’t have one?')
     }
     const existingParticipants = existingTeam.fields.participants.split(',')
     const participants = existingParticipants.filter(id => id !== requesterId)
@@ -121,5 +121,34 @@ exports.leaveTeam = async function(requesterId) {
       })
       return `You have left team “${existingTeam.fields.name}”.`
     }
+  })
+}
+
+exports.setTeamAttribute = async function(requesterId, key, value) {
+  return await teams.transaction(async (table, noop) => {
+    const teamRecords = await teams.get()
+    const existingTeam = findExistingTeam(teamRecords, requesterId)
+    if (!existingTeam) {
+      noop()
+      throw new Error('You are not currently in a team...')
+    }
+    if (key === 'name') {
+      const name = value.trim()
+      const normalize = x => x.replace(/\W/g, '').toLowerCase()
+      const anotherExistingTeamWithSameName = teamRecords.find(t => normalize(name) === normalize(t.fields.name))
+      if (
+        anotherExistingTeamWithSameName &&
+        (
+          anotherExistingTeamWithSameName.id !== existingTeam.id ||
+          name === existingTeam.fields.name
+        )
+      ) {
+        throw new Error('Cannot rename — another team with same or similar name already exists.')
+      }
+      await table.update(existingTeam.id, { name })
+      return `Updated \`${key}\`!`
+    }
+    noop()
+    throw new Error('Property `' + key + '` is not editable...')
   })
 }

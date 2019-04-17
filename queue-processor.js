@@ -14,6 +14,9 @@ async function processRequest(request, key) {
   if (request.type === 'LeaveTeam') {
     return await models.leaveTeam(request.requesterId)
   }
+  if (request.type === 'SetTeamAttribute') {
+    return await models.setTeamAttribute(request.requesterId, request.payload.key, request.payload.value)
+  }
   throw new Error('Unimplemented request handler for type ' + request.type)
 }
 
