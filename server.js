@@ -55,6 +55,10 @@ async function stupidBot(requesterId, responseUrl, text) {
     return {
       text: await models.getTeamInfo(requesterId)
     }
+  } else if (args[0] === 'list') {
+    return {
+      text: await models.listAllTeams()
+    }
   } else if (args[0] === 'retry') {
     const key = args[1]
     const ref = admin.database().ref('bot/requests').child(key)

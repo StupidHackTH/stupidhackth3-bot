@@ -4,8 +4,9 @@ function table(tableName) {
   const table = base(tableName)
   return {
     get() {
+      if (cache) return cache
       console.log('Fetching airtable table ' + tableName)
-      return cache || (cache = table.select().all()).catch(() => { cache = null })
+      return (cache = table.select().all()).catch(() => { cache = null })
     },
     invalidateCache() {
       cache = null
@@ -84,6 +85,17 @@ exports.getTeamInfo = async function(requesterId) {
     '',
     `*Team name:* ${existingTeam.fields.name} _(rename with \`/stupid set name NewName\`)_`,
     `*Members:* ${formatUsers(existingTeam.fields.participants.split(','))}`
+  ].join('\n')
+}
+
+exports.listAllTeams = async function() {
+  const teamRecords = await teams.get()
+  return [
+    'Here are the current teams:',
+    '',
+    ...teamRecords.filter(team => team.fields.participants).map(team => {
+      return `*${team.fields.name}*: ${formatUsers(team.fields.participants.split(','))}`
+    })
   ].join('\n')
 }
 
