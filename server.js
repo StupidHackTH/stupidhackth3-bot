@@ -27,7 +27,7 @@ async function postRequest(requesterId, responseUrl, description, type, payload)
   })
   return {
     response_type: 'in_channel',
-    text: `<@${requesterId}> Received request \`${ref.key}\` to ${description}.`
+    text: `<@${requesterId}> :ok_hand: Request \`${ref.key}\` to ${description} has been received.`
   }
 }
 
