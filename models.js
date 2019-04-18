@@ -161,12 +161,28 @@ exports.fsck = async function() {
   const log = text => out.push(`[${new Date().toJSON()}] ${text}`)
   log('*Performing fsck operation*')
 
-  const userList = await axios.get({
-    
+  const userList = (await axios.get('https://slack.com/api/users.list?limit=200', {
+    headers: {
+      Authorization: `Bearer ${process.env.SLACK_TOKEN}`
+    }
+  })).data.members.filter(user => user.profile.email)
+  log(`Found ${userList.length} users in Slack.`)
+  await slackUsers.transaction(async (table, noop) => {
+    const existingUsers = await slackUsers.get()
+    log(`Found ${existingUsers.length} users in Airtable.`)
+
+    for (const user of userList) {
+      const existingUserRecord = existingUsers.find(record => record.fields.userid === user.id)
+      if (!existingUserRecord) {
+        log(`Add user <@${user.id}>`)
+        await table.create({
+          username: user.name,
+          email: user.profile.email,
+          email: user.profile.email
+        })
+      }
+    }
   })
-//   await slackUsers.transaction(async (table, noop) => {
-    
-//   })
 //   await teams.transaction(async (table, noop) => {
 //     const teamRecords = await teams.get()
 //   })
