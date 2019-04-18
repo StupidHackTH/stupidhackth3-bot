@@ -1,4 +1,6 @@
 const base = require('airtable').base('appGku14IaF3SIUts')
+const axios = require('axios')
+
 function table(tableName) {
   let cache
   const table = base(tableName)
@@ -24,6 +26,7 @@ function table(tableName) {
 }
 
 const teams = table('Teams')
+const slackUsers = table('Slack users')
 
 const findExistingTeam = (teamRecords, userId) => {
   return teamRecords.find(teamRecord => (teamRecord.fields.participants || '').split(',').includes(userId))
@@ -151,4 +154,21 @@ exports.setTeamAttribute = async function(requesterId, key, value) {
     noop()
     throw new Error('Property `' + key + '` is not editable...')
   })
+}
+
+exports.fsck = async function() {
+  const out = []
+  const log = text => out.push(`[${new Date().toJSON()}] ${text}`)
+  log('*Performing fsck operation*')
+
+  const userList = await axios.get({
+    
+  })
+//   await slackUsers.transaction(async (table, noop) => {
+    
+//   })
+//   await teams.transaction(async (table, noop) => {
+//     const teamRecords = await teams.get()
+//   })
+  return out.join('\n')
 }

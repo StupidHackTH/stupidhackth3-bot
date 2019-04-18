@@ -66,6 +66,12 @@ async function stupidBot(requesterId, responseUrl, text) {
     return {
       text: await models.listAllTeams()
     }
+  } else if (args[0] === 'fsck') {
+    return post(
+      `fsck`,
+      'Fsck',
+      { }
+    )
   } else if (args[0] === 'retry') {
     const key = args[1]
     const ref = admin.database().ref('bot/requests').child(key)

@@ -17,6 +17,9 @@ async function processRequest(request, key) {
   if (request.type === 'SetTeamAttribute') {
     return await models.setTeamAttribute(request.requesterId, request.payload.key, request.payload.value)
   }
+  if (request.type === 'Fsck') {
+    return await models.fsck()
+  }
   throw new Error('Unimplemented request handler for type ' + request.type)
 }
 
