@@ -48,7 +48,7 @@ exports.start = async () => {
           result: result || null
         })
         await axios.post(request.responseUrl, {
-          response_type: 'in_channel',
+          // response_type: 'in_channel',
           text: `<@${request.requesterId}> :white_check_mark: Request \`${key}\` completed — ${result}`,
         })
       } catch (error) {
@@ -58,7 +58,7 @@ exports.start = async () => {
           error: String(error && error.stack)
         })
         await axios.post(request.responseUrl, {
-          response_type: 'in_channel',
+          // response_type: 'in_channel',
           text: `<@${request.requesterId}> :x: Request \`${key}\` failed — ${error}`,
         })
       }
