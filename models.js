@@ -7,7 +7,7 @@ function table(tableName) {
   return {
     get() {
       if (cache) return cache
-      console.log('Fetching airtable table ' + tableName)
+      console.log('[airable] Fetching table ' + tableName)
       return (cache = table.select().all()).catch(() => { cache = null })
     },
     invalidateCache() {
@@ -27,12 +27,18 @@ function table(tableName) {
 
 const teams = table('Teams')
 const slackUsers = table('Slack users')
+const attendees = table('Attendees')
 
 const findExistingTeam = (teamRecords, userId) => {
   return teamRecords.find(teamRecord => (teamRecord.fields.participants || '').split(',').includes(userId))
 }
 
 const formatUsers = userIds => userIds.map(u => `<@${u}>`).join(', ')
+
+const calculateTeamUsers = async function(participants) {
+  const existingUsers = await slackUsers.get()
+  return existingUsers.filter(record => participants.includes(record.fields.id)).map(record => record.id)
+}
 
 exports.addToTeam = async function(requesterId, addeeIds) {
   return await teams.transaction(async (table, noop) => {
@@ -52,7 +58,8 @@ exports.addToTeam = async function(requesterId, addeeIds) {
       const added = participants.filter(p => !existingParticipants.includes(p))
       if (added.length > 0) {
         await table.update(existingTeam.id, {
-          participants: participants.join(',')
+          participants: participants.join(','),
+          users: await calculateTeamUsers(participants),
         })
         return `Added ${formatUsers(added)} to team “${existingTeam.fields.name}”.${btw}`
       } else {
@@ -70,7 +77,8 @@ exports.addToTeam = async function(requesterId, addeeIds) {
       }
       const createdTeam = await table.create({
         name: `New Team ${number}`,
-        participants: participants.join(',')
+        participants: participants.join(','),
+        users: await calculateTeamUsers(participants),
       })
       return `Created a new team “${createdTeam.fields.name}” with ${formatUsers(participants)}${btw}`
     }
@@ -115,12 +123,14 @@ exports.leaveTeam = async function(requesterId) {
     if (participants.length < 3) {
       await table.update(existingTeam.id, {
         name: existingTeam.fields.name + ' [disbanded]',
-        participants: ''
+        participants: '',
+        users: []
       })
       return `Your team “${existingTeam.fields.name}” has been disbanded because it has less than 3 members. ${formatUsers(participants)} will have to find a new team.`
     } else {
       await table.update(existingTeam.id, {
-        participants: participants.join(',')
+        participants: participants.join(','),
+        users: await calculateTeamUsers(participants),
       })
       return `You have left team “${existingTeam.fields.name}”.`
     }
@@ -158,7 +168,11 @@ exports.setTeamAttribute = async function(requesterId, key, value) {
 
 exports.fsck = async function() {
   const out = []
-  const log = text => out.push(`[${new Date().toJSON()}] ${text}`)
+  const log = text => {
+    const line = `[${new Date().toJSON()}] ${text}`
+    console.log('[models.fsck]', line)
+    out.push(line)
+  }
   log('*Performing fsck operation*')
 
   const userList = (await axios.get('https://slack.com/api/users.list?limit=200', {
@@ -167,18 +181,24 @@ exports.fsck = async function() {
     }
   })).data.members.filter(user => user.profile.email)
   log(`Found ${userList.length} users in Slack.`)
+
+  const existingAttendees = await attendees.get()
+
   await slackUsers.transaction(async (table, noop) => {
     const existingUsers = await slackUsers.get()
     log(`Found ${existingUsers.length} users in Airtable.`)
 
     for (const user of userList) {
-      const existingUserRecord = existingUsers.find(record => record.fields.userid === user.id)
+      const existingUserRecord = existingUsers.find(record => record.fields.id === user.id)
       if (!existingUserRecord) {
         log(`Add user <@${user.id}>`)
         await table.create({
-          username: user.name,
+          name: user.name,
           email: user.profile.email,
-          email: user.profile.email
+          id: user.id,
+          real_name: user.profile.real_name,
+          display_name: user.profile.display_name,
+          attendee: existingAttendees.filter(record => record.fields.Email === user.profile.email).map(record => record.id)
         })
       }
     }
