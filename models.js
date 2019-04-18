@@ -80,7 +80,10 @@ exports.addToTeam = async function(requesterId, addeeIds) {
         participants: participants.join(','),
         users: await calculateTeamUsers(participants),
       })
-      return `Created a new team “${createdTeam.fields.name}” with ${formatUsers(participants)}${btw}`
+      return [
+        `Created a new team “${createdTeam.fields.name}” with ${formatUsers(participants)}${btw}`,
+        `To change your team name, run \`/stupid set name New Team Name\``
+      ].join('\n')
     }
   })
 }
@@ -94,7 +97,7 @@ exports.getTeamInfo = async function(requesterId) {
   return [
     'Here’s your team info:',
     '',
-    `*Team name:* ${existingTeam.fields.name} _(rename with \`/stupid set name NewName\`)_`,
+    `*Team name:* ${existingTeam.fields.name} _(rename with \`/stupid set name New Team Name\`)_`,
     `*Members:* ${formatUsers(existingTeam.fields.participants.split(','))}`
   ].join('\n')
 }
