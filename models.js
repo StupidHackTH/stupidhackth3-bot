@@ -98,7 +98,10 @@ exports.getTeamInfo = async function(requesterId) {
     'Here’s your team info:',
     '',
     `*Team name:* ${existingTeam.fields.name} _(rename with \`/stupid set name New Team Name\`)_`,
-    `*Members:* ${formatUsers(existingTeam.fields.participants.split(','))}`
+    `*Members:* ${formatUsers(existingTeam.fields.participants.split(','))}`,
+    `*URL:* ${existingTeam.fields.url || ''} _(update with \`/stupid set url ...\`)_`,
+    ``,
+    `*Description:* ${existingTeam.fields.description || '_No description given_'} _(update with \`/stupid set description ...\`)_`,
   ].join('\n')
 }
 
@@ -162,6 +165,14 @@ exports.setTeamAttribute = async function(requesterId, key, value) {
         throw new Error('Cannot rename — another team with same or similar name already exists.')
       }
       await table.update(existingTeam.id, { name })
+      return `Updated \`${key}\`!`
+    }
+    if (/^desc/.test(key)) {
+      await table.update(existingTeam.id, { description: value })
+      return `Updated \`${key}\`!`
+    }
+    if (key === 'url') {
+      await table.update(existingTeam.id, { url: value })
       return `Updated \`${key}\`!`
     }
     noop()
