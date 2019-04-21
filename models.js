@@ -154,7 +154,7 @@ exports.setTeamAttribute = async function(requesterId, key, value) {
     }
     if (key === 'name') {
       const name = value.trim()
-      const normalize = x => x.replace(/\S/g, '').toLowerCase()
+      const normalize = x => x.replace(/\s/g, '').toLowerCase()
       const anotherExistingTeamWithSameName = teamRecords.find(t => normalize(name) === normalize(t.fields.name))
       if (
         anotherExistingTeamWithSameName &&
