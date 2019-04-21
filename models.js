@@ -100,6 +100,7 @@ exports.getTeamInfo = async function(requesterId) {
     `*Team name:* ${existingTeam.fields.name} _(rename with \`/stupid set name New Team Name\`)_`,
     `*Members:* ${formatUsers(existingTeam.fields.participants.split(','))}`,
     `*URL:* ${existingTeam.fields.url || ''} _(update with \`/stupid set url ...\`)_`,
+    `*Live:* ${existingTeam.fields.private ? 'no' : 'yes'}`,
     ``,
     `*Description:* ${existingTeam.fields.description || '_No description given_'} _(update with \`/stupid set description ...\`)_`,
   ].join('\n')
@@ -173,6 +174,13 @@ exports.setTeamAttribute = async function(requesterId, key, value) {
     }
     if (key === 'url') {
       await table.update(existingTeam.id, { url: value })
+      return `Updated \`${key}\`!`
+    }
+    if (key === 'live') {
+      if (value !== 'no' && value !== 'yes') {
+        throw new Error('Please set to "no" or "yes" only.')
+      }
+      await table.update(existingTeam.id, { private: value === 'no' })
       return `Updated \`${key}\`!`
     }
     noop()
