@@ -18,9 +18,37 @@ This bot allows participants and organizers who are all in the Slack workspace t
 
   - **Write models:** The transaction is first written into Firebase Realtime Database with "pending" state.
     A separate process then reads from the database, and process the requests one-by-one, essentially turning it into an operation queue.
-    Once the operation is completed, the read model's cache is invalidated, and the transaction state changes to either "completed" or "failure".
+    Once the operation is completed, the read model's cache is invalidated, and the transaction state changes to either "completed" or "failed".
     Here, the operation queue also acts as an audit log, allowing administrator to inspect each transaction:
     When it happened, by whom, and what is the result.
+
+## Operation Queue Data Model
+
+```ts
+/** Human-readable description for displaying and auditing purpose */
+description: string
+
+/** Operation type. See `queue-processor.js` */
+type: string
+
+/** Operation payload */
+payload: any
+
+/** Operation status */
+status: 'pending' | 'completed' | 'failed'
+
+/** The time this operation is requested. To ensure FIFO processing order. */
+createdAt: admin.database.ServerValue.TIMESTAMP
+
+/** Slack user ID of the requester, for auditing */
+requesterId: string
+
+/** */
+responseUrl: string
+
+/** Result of the operation, for replying back and for audit */
+result: string
+```
 
 Made by [Glitch](https://glitch.com/)
 -------------------
