@@ -6,7 +6,7 @@ This bot allows participants and organizers who are all in the Slack workspace t
 
 - Data is stored inside Airtable to allow easy visualization as well as manual edits.
 
-- All write operations are asynchronous (due to Airtable's API rate limit).
+- All write operations are asynchronous (due to Airtable's API rate limit). The work queue is 
 
 Made by [Glitch](https://glitch.com/)
 -------------------
