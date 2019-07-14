@@ -6,7 +6,18 @@ This bot allows participants and organizers who are all in the Slack workspace t
 
 - Data is stored inside Airtable to allow easy visualization as well as manual edits.
 
-- All write operations are asynchronous (due to Airtable's API rate limit). The work queue is 
+- Due to Airtable's API rate limit and lack of transactions or compare-and-set mechanism, we must be extra careful:
+
+  - Reading the data too often can lead to an API rate limit.
+  - Concurrent writes can cause data corruption. e.g. 2 requests adding to an array on the same row can cause data loss,
+    because when modifying arrays in Airtable, we have send the new array contents, not the changes to be made (like in DBMS).
+
+  Therefore, we have two types of models, similar to CQRS systems:
+
+  - **Read models:** Reads data from Airtable, with caching of table contents to allow frequent reads.
+
+  - **Write models:** The transaction is first written into Firebase Realtime Database with "pending" state.
+    A separate process then reads from the database, and process the requests one-by-one
 
 Made by [Glitch](https://glitch.com/)
 -------------------
