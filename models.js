@@ -1,6 +1,7 @@
 const base = require('airtable').base('appGku14IaF3SIUts')
 const axios = require('axios')
 
+/** A thin wrapper around an Airtable table, with an in-process cache. */
 function table(tableName) {
   let cache
   const table = base(tableName)
