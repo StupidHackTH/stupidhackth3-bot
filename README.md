@@ -43,7 +43,11 @@ createdAt: admin.database.ServerValue.TIMESTAMP
 /** Slack user ID of the requester, for auditing */
 requesterId: string
 
-/** */
+/**
+ * The `response_url` from the Slash command invocation.
+ * So that the bot can reply back to the requester with the result.
+ * @see https://api.slack.com/slash-commands
+ */
 responseUrl: string
 
 /** Result of the operation, for replying back and for audit */

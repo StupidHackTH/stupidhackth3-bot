@@ -14,6 +14,7 @@ function table(tableName) {
     invalidateCache() {
       cache = null
     },
+    // Locking is not implemented here. This function must not be called concurrently.
     async transaction(tx) {
       let noop = false
       try {
