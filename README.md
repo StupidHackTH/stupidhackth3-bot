@@ -1,25 +1,12 @@
-Welcome to Glitch
+stupidhackth3-bot
 =================
 
-Click `Show` in the header to see your app live. Updates to your code will instantly deploy and update live.
+The Slack bot used in Stupid Hackathon 3.
+This bot allows participants and organizers who are all in the Slack workspace to register and manage their team.
 
-**Glitch** is the friendly community where you'll build the app of your dreams. Glitch lets you instantly create, remix, edit, and host an app, bot or site, and you can invite collaborators or helpers to simultaneously edit code with you.
+- Data is stored inside Airtable to allow easy visualization as well as manual edits.
 
-Find out more [about Glitch](https://glitch.com/about).
-
-
-Your Project
-------------
-
-On the front-end,
-- edit `public/client.js`, `public/style.css` and `views/index.html`
-- drag in `assets`, like images or music, to add them to your project
-
-On the back-end,
-- your app starts at `server.js`
-- add frameworks and packages in `package.json`
-- safely store app secrets in `.env` (nobody can see this but you and people you invite)
-
+- All write operations are asynchronous (due to Airtable's API rate limit).
 
 Made by [Glitch](https://glitch.com/)
 -------------------

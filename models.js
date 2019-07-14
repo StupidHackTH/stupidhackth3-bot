@@ -225,8 +225,5 @@ exports.fsck = async function() {
       }
     }
   })
-//   await teams.transaction(async (table, noop) => {
-//     const teamRecords = await teams.get()
-//   })
   return out.join('\n')
 }

@@ -4,7 +4,7 @@ const query = admin.database().ref('bot/requests').orderByChild('status').equalT
 const axios = require('axios')
 
 query.on('value', () => {
-  // Just for the subscription...
+  // Just to make the subscription persistent...
 })
 
 async function processRequest(request, key) {
